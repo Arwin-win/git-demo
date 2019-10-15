@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>贪吃蛇</title>
+    <style type="text/css">
+        .jiemian {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <span class="btn1">
+        <input type="button" value="开始游戏" onmousedown="beginGame(event)">
+    </span>
+    <span class="btn2">
+        <input type="button" value="增加难度" onmousedown="addDifficult(event)">
+    </span>
+    <span class="jiemian">
+        <canvas id="myCanvas" width="82" height="82"
+            style="background: rgb(244, 248, 105)">浏览器不支持,可以使用谷歌Chrome浏览器</canvas>
+    </span>
+
+    <script type="text/javascript">
+        var ctx = document.getElementById("myCanvas").getContext("2d"),
+            canvasWidth = document.getElementById("myCanvas").width,
+            canvasHeight = document.getElementById("myCanvas").height;
+        var snakePosition = [],
+            n = 0,
+            t = 0,
+            blackX = 1,
+            blackY = 1,
+            foodX = 1,
+            foodY = 1,
+            keyNum = 1,
+            snakeLength = 3,
+            difficult = 300,
+            pauseGame = 1;
+        function eatSnake() {	//循环执行算法
+            if (pauseGame == 0) {	//用于中断游戏
+                return;
+            }
+            snakePosition[n] = blackX,
+                snakePosition[n + 1] = blackY;	//用snakePosition数组记录黑蛇走过的位置
+            drawSnake("black", blackX, blackY);	//画黑蛇
+            if (snakePosition[n] <= 0 || snakePosition[n + 1] <= 0 || snakePosition[n] >= canvasWidth || snakePosition[n + 1] >= canvasHeight) {	//判定是否撞墙
+                return alert("o(╯□╰)o撞墙了");
+            }
+            for (var i = 0; i <= snakeLength * 2; i += 2) {	//判断次数为snakeLength*2
+                if (snakePosition.slice(n - snakeLength * 2, n)[i] == snakePosition[n] && snakePosition.slice(n - snakeLength * 2, n)[i + 1] == snakePosition[n + 1]) {	//比较下一步坐标是否和身体坐标相同,相同即为吃到自己
+                    return alert("o(╯□╰)o咬到自己了");	//判断是否吃到自己,不能用splice(),splice会改变原数组,n-snakeLength*2与n之间长度代表蛇身体坐标
+                }
+                if (snakePosition.slice(n - snakeLength * 2, n)[i] == foodX && snakePosition.slice(n - snakeLength * 2, n)[i + 1] == foodY) {	//校验食物是否随机出现在蛇的身体上
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(foodX, foodY, 8, 8);	//如果食物随机出现在蛇身上就清除食物,也就是把食物变成黑色
+                    drawFood();	//重新画一个食物
+                }
+            }
+            if (snakePosition[n] == foodX && snakePosition[n + 1] == foodY) {	//判断是否吃到食物
+                snakeLength += 1;	//吃到食物身体长度+1
+                drawFood();	//吃到食物就再重新画一个食物
+            }
+            n += 2;	//数组中的每两个元素代表一个x,y坐标位置
+            drawSnake("rgb(244, 248, 105)", snakePosition[t], snakePosition[t + 1]);	//用画布背景颜色来消除黑蛇多余的尾巴
+            if (n - t > snakeLength * 2) {	//根据snakeLength的值保留蛇的身长
+                t += 2;	//每两个元素代表一个x,y坐标位置
+            }
+            blackX = blackX + (keyNum % 9 * 9), blackY = blackY + (~~(keyNum / 9) * 9);	//黑蛇下一步的位置移动,与键盘方向关联
+            setTimeout(arguments.callee, difficult);	//循环执行,difficult用来设定蛇的移动速度,也就是游戏难度
+        };
+        function drawSnake(sty, x, y) {	//画蛇类
+            ctx.fillStyle = sty;	//画蛇的颜色
+            ctx.fillRect(x, y, 8, 8);	//画蛇的身体
+        }
+        function drawFood() {	//画食物
+            ctx.fillStyle = "red";	//画食物的颜色
+            foodX = ~~((Math.random() * (canvasWidth - 1)) / 9) * 9 + 1, foodY = ~~((Math.random() * (canvasHeight - 1)) / 9) * 9 + 1;	//随机食物的位置,但必须是9的倍数+1
+            ctx.fillRect(foodX, foodY, 8, 8);	//画出食物
+        }
+        function addDifficult(event) {	//增加难度
+            pauseGame = 0;	//暂停游戏
+            if (difficult > 0) {
+                difficult -= 60;
+                document.getElementById("myCanvas").width += 81,
+                    document.getElementById("myCanvas").height += 81;	//每点击一次按钮画布尺寸增加81
+                canvasWidth = document.getElementById("myCanvas").width,
+                    canvasHeight = document.getElementById("myCanvas").height;	//判定条件也要同步改变
+            } else {
+                alert("这是最高难度了! 点击确定按钮可重置难度");
+                document.getElementById("myCanvas").width = 82,
+                    document.getElementById("myCanvas").height = 82;	//还原到初始画布尺寸
+                canvasWidth = document.getElementById("myCanvas").width,
+                    canvasHeight = document.getElementById("myCanvas").height;	//判断条件还原到初始条件
+                difficult = 300;	//还原到初始速度
+            }
+        }
+        function beginGame(event) {	//开始游戏按钮
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);	//重新开始游戏先清空画布
+            snakePosition = [],
+                n = 0,
+                t = 0,
+                blackX = 1,
+                blackY = 1,
+                keyNum = 1,
+                snakeLength = 3,
+                pauseGame = 1; //初始化一些数据
+            drawFood();	//开始游戏先画一个食物
+            eatSnake();	//开始游戏
+        }
+        document.onkeydown = function moveSnake(event) {	//键盘事件
+            keyNum = [-1, -9, 1, 9][event.keyCode % 37];	//-1 -9 1 9 分别代表键盘的左 上 右 下
+        }
+    </script>
+</body>
+
+</html>
